@@ -1,38 +1,29 @@
-package com.chenlittleping.videoeditor.decoder
+package com.nam.learningvideo.media.extractor
 
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import java.nio.ByteBuffer
 
 
-/**
- * 音视频分离器
- *
- * @author Chen Xiaoping (562818444@qq.com)
- * @since VideoEditor
- * @version VideoEditor
- * @Datetime 2019-09-03
- *
- */
 
 class MMExtractor(path: String?) {
 
-    /**音视频分离器*/
+    /** Bộ tách âm thanh và video */
     private var mExtractor: MediaExtractor? = null
 
-    /**音频通道索引*/
+    /** Chỉ mục kênh âm thanh */
     private var mAudioTrack = -1
 
-    /**视频通道索引*/
+    /** Chỉ mục kênh video */
     private var mVideoTrack = -1
 
-    /**当前帧时间戳*/
+    /** Dấu thời gian của khung hiện tại */
     private var mCurSampleTime: Long = 0
 
-    /**当前帧标志*/
+    /** Cờ khung hiện tại */
     private var mCurSampleFlag: Int = 0
 
-    /**开始解码时间点*/
+    /** Thời điểm bắt đầu giải mã */
     private var mStartPos: Long = 0
 
     init {
@@ -41,7 +32,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * 获取视频格式参数
+     * Nhận thông số định dạng video
      */
     fun getVideoFormat(): MediaFormat? {
         for (i in 0 until mExtractor!!.trackCount) {
@@ -58,7 +49,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * 获取音频格式参数
+     * Nhận thông số định dạng âm thanh
      */
     fun getAudioFormat(): MediaFormat? {
         for (i in 0 until mExtractor!!.trackCount) {
@@ -75,7 +66,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * 读取视频数据
+     * Đọc dữ liệu video
      */
     fun readBuffer(byteBuffer: ByteBuffer): Int {
         byteBuffer.clear()
@@ -84,16 +75,16 @@ class MMExtractor(path: String?) {
         if (readSampleCount < 0) {
             return -1
         }
-        //记录当前帧的时间戳
+        // Ghi lại dấu thời gian của khung hiện tại
         mCurSampleTime = mExtractor!!.sampleTime
         mCurSampleFlag = mExtractor!!.sampleFlags
-        //进入下一帧
+        // Chuyển đến khung tiếp theo
         mExtractor!!.advance()
         return readSampleCount
     }
 
     /**
-     * 选择通道
+     * Chọn kênh
      */
     private fun selectSourceTrack() {
         if (mVideoTrack >= 0) {
@@ -104,7 +95,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * Seek到指定位置，并返回实际帧的时间戳
+     * Tìm kiếm vị trí được chỉ định và trả về dấu thời gian của khung hình thực tế
      */
     fun seek(pos: Long): Long {
         mExtractor!!.seekTo(pos, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
@@ -112,7 +103,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * 停止读取数据
+     * Ngừng đọc dữ liệu
      */
     fun stop() {
         mExtractor?.release()
@@ -132,7 +123,7 @@ class MMExtractor(path: String?) {
     }
 
     /**
-     * 获取当前帧时间
+     * Nhận khung thời gian hiện tại
      */
     fun getCurrentTimestamp(): Long {
         return mCurSampleTime

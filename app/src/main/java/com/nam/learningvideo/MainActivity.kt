@@ -1,12 +1,12 @@
-package com.cxp.learningvideo
+package com.nam.learningvideo
 
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
 import android.view.View
-import com.cxp.learningvideo.media.decoder.AudioDecoder
-import com.cxp.learningvideo.media.decoder.VideoDecoder
-import com.cxp.learningvideo.media.muxer.MP4Repack
+import com.nam.learningvideo.media.decoder.AudioDecoder
+import com.nam.learningvideo.media.decoder.VideoDecoder
+import com.nam.learningvideo.media.muxer.MP4Repack
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.Executors
 

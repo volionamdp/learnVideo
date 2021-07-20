@@ -1,21 +1,12 @@
-package com.cxp.learningvideo.media.muxer
+package com.nam.learningvideo.media.muxer
 
 import android.media.MediaCodec
 import android.util.Log
-import com.cxp.learningvideo.media.extractor.AudioExtractor
-import com.cxp.learningvideo.media.extractor.VideoExtractor
+import com.nam.learningvideo.media.extractor.AudioExtractor
+import com.nam.learningvideo.media.extractor.VideoExtractor
 import java.nio.ByteBuffer
 
 
-/**
- * MP4重打包工具
- *
- * @author Chen Xiaoping (562818444@qq.com)
- * @since LearningVideo
- * @version LearningVideo
- * @Datetime 2019-09-19 14:09
- *
- */
 class MP4Repack(path: String) {
 
     private val TAG = "MP4Repack"
@@ -61,7 +52,7 @@ class MP4Repack(path: String) {
             mAExtractor.stop()
             mVExtractor.stop()
             mMuxer.release()
-            Log.i(TAG, "MP4 重打包完成")
+            Log.i(TAG, "MP4 Đóng gói lại hoàn tất")
         }.start()
     }
 }

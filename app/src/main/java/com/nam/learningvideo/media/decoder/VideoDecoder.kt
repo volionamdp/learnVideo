@@ -1,4 +1,4 @@
-package com.cxp.learningvideo.media.decoder
+package com.nam.learningvideo.media.decoder
 
 import android.media.MediaCodec
 import android.media.MediaFormat
@@ -6,21 +6,12 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import com.cxp.learningvideo.media.BaseDecoder
-import com.cxp.learningvideo.media.extractor.VideoExtractor
-import com.cxp.learningvideo.media.IExtractor
+import com.nam.learningvideo.media.BaseDecoder
+import com.nam.learningvideo.media.extractor.VideoExtractor
+import com.nam.learningvideo.media.IExtractor
 import java.nio.ByteBuffer
 
 
-/**
- * 视频解码器
- *
- * @author Chen Xiaoping (562818444@qq.com)
- * @since LearningVideo
- * @version LearningVideo
- * @Datetime 2019-09-03 10:52
- *
- */
 class VideoDecoder(path: String, sfv: SurfaceView?, surface: Surface?): BaseDecoder(path) {
     private val TAG = "VideoDecoder"
     
@@ -29,8 +20,8 @@ class VideoDecoder(path: String, sfv: SurfaceView?, surface: Surface?): BaseDeco
     
     override fun check(): Boolean {
         if (mSurfaceView == null && mSurface == null) {
-            Log.w(TAG, "SurfaceView和Surface都为空，至少需要一个不为空")
-            mStateListener?.decoderError(this, "显示器为空")
+            Log.w(TAG, "SurfaceView và Surface đều trống, ít nhất một không được để trống")
+            mStateListener?.decoderError(this, "Màn hình trống")
             return false
         }
         return true

@@ -1,4 +1,4 @@
-package com.cxp.learningvideo
+package com.nam.learningvideo
 
 import org.junit.Test
 

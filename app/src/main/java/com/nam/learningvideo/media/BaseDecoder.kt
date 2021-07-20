@@ -1,4 +1,4 @@
-package com.cxp.learningvideo.media
+package com.nam.learningvideo.media
 
 import android.media.MediaCodec
 import android.media.MediaFormat

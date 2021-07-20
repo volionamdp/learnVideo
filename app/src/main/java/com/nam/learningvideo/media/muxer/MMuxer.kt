@@ -1,4 +1,4 @@
-package com.cxp.learningvideo.media.muxer
+package com.nam.learningvideo.media.muxer
 
 import android.media.MediaCodec
 import android.media.MediaFormat
@@ -9,16 +9,6 @@ import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-/**
- * 音视频封装器
- *
- * @author Chen Xiaoping (562818444@qq.com)
- * @since LearningVideo
- * @version LearningVideo
- * @Datetime 2019-09-19 11:02
- *
- */
 class MMuxer {
 
     private val TAG = "MMuxer"
@@ -52,7 +42,7 @@ class MMuxer {
                 return
             }
 
-            Log.i(TAG, "添加视频轨道")
+            Log.i(TAG, "Thêm bản nhạc video")
             mIsVideoTrackAdd = true
             startMuxer()
         }
@@ -67,7 +57,7 @@ class MMuxer {
                 e.printStackTrace()
                 return
             }
-            Log.i(TAG, "添加音频轨道")
+            Log.i(TAG, "Thêm bản âm thanh")
             mIsAudioTrackAdd = true
             startMuxer()
         }
@@ -101,7 +91,7 @@ class MMuxer {
         if (mIsAudioTrackAdd && mIsVideoTrackAdd) {
             mMediaMuxer?.start()
             mIsStart = true
-            Log.i(TAG, "启动封装器")
+            Log.i(TAG, "Bắt đầu trình bao bọc")
         }
     }
 
@@ -112,7 +102,7 @@ class MMuxer {
             mMediaMuxer?.stop()
             mMediaMuxer?.release()
             mMediaMuxer = null
-            Log.i(TAG, "退出封装器")
+                Log.i(TAG, "Thoát trình bao bọc")
         } catch (e: Exception) {
             e.printStackTrace()
         }
