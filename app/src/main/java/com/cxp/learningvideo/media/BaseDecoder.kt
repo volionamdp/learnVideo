@@ -6,59 +6,48 @@ import android.util.Log
 import java.io.File
 import java.nio.ByteBuffer
 
-
-/**
- * 解码器基类
- *
- * @author Chen Xiaoping (562818444@qq.com)
- * @since LearningVideo
- * @version LearningVideo
- * @Datetime 2019-09-02 09:43
- *
- */
-abstract class BaseDecoder(private val mFilePath: String): IDecoder {
+abstract class BaseDecoder(private val mFilePath: String) : IDecoder {
 
     private val TAG = "BaseDecoder"
 
-    //-------------线程相关------------------------
+    // ------------- Chủ đề liên quan ------------------------
     /**
-     * 解码器是否在运行
+     * Bộ giải mã có đang chạy không
      */
     private var mIsRunning = true
 
     /**
-     * 线程等待锁
+     * Chủ đề chờ khóa
      */
     private val mLock = Object()
 
     /**
-     * 是否可以进入解码
+     * Có thể nhập giải mã không
      */
     private var mReadyForDecode = false
 
-    //---------------状态相关-----------------------
+    // --------------- Trạng thái liên quan -----------------------
     /**
-     * 音视频解码器
+     * Bộ giải mã âm thanh và video
      */
     private var mCodec: MediaCodec? = null
 
     /**
-     * 音视频数据读取器
+     * Đầu đọc dữ liệu âm thanh và video
      */
     private var mExtractor: IExtractor? = null
-
     /**
-     * 解码输入缓存区
+     * Giải mã bộ đệm đầu vào
      */
     private var mInputBuffers: Array<ByteBuffer>? = null
 
     /**
-     * 解码输出缓存区
+     * Giải mã bộ đệm đầu ra
      */
     private var mOutputBuffers: Array<ByteBuffer>? = null
 
     /**
-     * 解码数据信息
+     * Giải mã thông tin dữ liệu
      */
     private var mBufferInfo = MediaCodec.BufferInfo()
 
@@ -67,7 +56,7 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     protected var mStateListener: IDecoderStateListener? = null
 
     /**
-     * 流数据是否结束
+     * Dữ liệu luồng có kết thúc hay không
      */
     private var mIsEOS = false
 
@@ -82,7 +71,7 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     private var mEndPos: Long = 0
 
     /**
-     * 开始解码时间，用于音视频同步
+     * Thời gian bắt đầu giải mã, được sử dụng để đồng bộ hóa âm thanh và video
      */
     private var mStartTimeForSync = -1L
 
@@ -92,26 +81,27 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
         }
         mStateListener?.decoderPrepare(this)
 
-        //【解码步骤：1. 初始化，并启动解码器】
+        // [Các bước giải mã: 1. Khởi tạo và khởi động bộ giải mã]
         if (!init()) return
 
-        Log.i(TAG, "开始解码")
+        Log.i(TAG, "Bắt đầu giải mã")
 
         while (mIsRunning) {
             if (mState != DecodeState.START &&
                 mState != DecodeState.DECODING &&
-                mState != DecodeState.SEEKING) {
-                Log.i(TAG, "进入等待：$mState")
+                mState != DecodeState.SEEKING
+            ) {
+                Log.i(TAG, "Vào chờ：$mState")
 
                 waitDecode()
-
-                // ---------【同步时间矫正】-------------
-                //恢复同步的起始时间，即去除等待流失的时间
+                // --------- [Chỉnh sửa thời gian đồng bộ hóa] -------------
+                // Thời gian bắt đầu tiếp tục đồng bộ hóa, tức là loại bỏ thời gian chờ bị mất
                 mStartTimeForSync = System.currentTimeMillis() - getCurTimeStamp()
             }
 
             if (!mIsRunning ||
-                mState == DecodeState.STOP) {
+                mState == DecodeState.STOP
+            ) {
                 mIsRunning = false
                 break
             }
@@ -120,30 +110,30 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
                 mStartTimeForSync = System.currentTimeMillis()
             }
 
-            //如果数据没有解码完毕，将数据推入解码器解码
+            // Nếu dữ liệu chưa được giải mã, đẩy dữ liệu vào bộ giải mã để giải mã
             if (!mIsEOS) {
-                //【解码步骤：2. 见数据压入解码器输入缓冲】
+                // [Các bước giải mã: 2. Xem dữ liệu được nhấn vào bộ đệm đầu vào của bộ giải mã]
                 mIsEOS = pushBufferToDecoder()
             }
 
-            //【解码步骤：3. 将解码好的数据从缓冲区拉取出来】
+            // [Bước giải mã: 3. Kéo dữ liệu đã giải mã ra khỏi bộ đệm]
             val index = pullBufferFromDecoder()
             if (index >= 0) {
-                // ---------【音视频同步】-------------
+                // --------- 【đồng bộ âm thanh và video】 -------------
                 if (mState == DecodeState.DECODING) {
                     sleepRender()
                 }
-                //【解码步骤：4. 渲染】
+                // [Bước giải mã: 4. Kết xuất]
                 render(mOutputBuffers!![index], mBufferInfo)
-                //【解码步骤：5. 释放输出缓冲】
+                // [Bước giải mã: 5. Giải phóng bộ đệm đầu ra]
                 mCodec!!.releaseOutputBuffer(index, true)
                 if (mState == DecodeState.START) {
                     mState = DecodeState.PAUSE
                 }
             }
-            //【解码步骤：6. 判断解码是否完成】
+            // 【Bước giải mã: 6. Xác định xem quá trình giải mã đã hoàn tất chưa】
             if (mBufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
-                Log.i(TAG, "解码结束")
+                Log.i(TAG, "Kết thúc giải mã")
                 mState = DecodeState.FINISH
                 mStateListener?.decoderFinish(this)
             }
@@ -154,28 +144,29 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
 
     private fun init(): Boolean {
         if (mFilePath.isEmpty() || !File(mFilePath).exists()) {
-            Log.w(TAG, "文件路径为空")
-            mStateListener?.decoderError(this, "文件路径为空")
+            Log.w(TAG, "Đường dẫn tệp trống")
+            mStateListener?.decoderError(this, "Đường dẫn tệp trống")
             return false
         }
 
         if (!check()) return false
 
-        //初始化数据提取器
+        // Khởi tạo trình trích xuất dữ liệu
         mExtractor = initExtractor(mFilePath)
         if (mExtractor == null ||
-            mExtractor!!.getFormat() == null) {
-            Log.w(TAG, "无法解析文件")
+            mExtractor!!.getFormat() == null
+        ) {
+            Log.w(TAG, "Không thể phân tích cú pháp tệp")
             return false
         }
 
-        //初始化参数
+        // Tham số khởi tạo
         if (!initParams()) return false
 
-        //初始化渲染器
+        // Khởi tạo trình kết xuất
         if (!initRender()) return false
 
-        //初始化解码器
+        // Khởi tạo bộ giải mã
         if (!initCodec()) return false
         return true
     }
@@ -219,24 +210,30 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
             val sampleSize = mExtractor!!.readBuffer(inputBuffer)
 
             if (sampleSize < 0) {
-                //如果数据已经取完，压入数据结束标志：MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                mCodec!!.queueInputBuffer(inputBufferIndex, 0, 0,
-                    0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                // Nếu dữ liệu đã được tìm nạp, hãy nhấn vào cờ kết thúc dữ liệu: MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                mCodec!!.queueInputBuffer(
+                    inputBufferIndex, 0, 0,
+                    0, MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                )
                 isEndOfStream = true
             } else {
-                mCodec!!.queueInputBuffer(inputBufferIndex, 0,
-                    sampleSize, mExtractor!!.getCurrentTimestamp(), 0)
+                mCodec!!.queueInputBuffer(
+                    inputBufferIndex, 0,
+                    sampleSize, mExtractor!!.getCurrentTimestamp(), 0
+                )
             }
         }
         return isEndOfStream
     }
 
     private fun pullBufferFromDecoder(): Int {
-        // 查询是否有解码完成的数据，index >=0 时，表示数据有效，并且index为缓冲区索引
+        // Truy vấn xem có dữ liệu được giải mã hay không, khi chỉ mục> = 0, điều đó có nghĩa là dữ liệu hợp lệ và chỉ mục là chỉ mục bộ đệm
         var index = mCodec!!.dequeueOutputBuffer(mBufferInfo, 1000)
         when (index) {
-            MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {}
-            MediaCodec.INFO_TRY_AGAIN_LATER -> {}
+            MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+            }
+            MediaCodec.INFO_TRY_AGAIN_LATER -> {
+            }
             MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
                 mOutputBuffers = mCodec!!.outputBuffers
             }
@@ -268,8 +265,8 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     }
 
     /**
-     * 解码线程进入等待
-     */
+     * Chuỗi giải mã đang chờ
+     **/
     private fun waitDecode() {
         try {
             if (mState == DecodeState.PAUSE) {
@@ -284,7 +281,7 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     }
 
     /**
-     * 通知解码线程继续运行
+     *Thông báo cho chuỗi giải mã tiếp tục chạy
      */
     protected fun notifyDecode() {
         synchronized(mLock) {
@@ -313,7 +310,7 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     }
 
     override fun stop() {
-        
+
     }
 
     override fun isDecoding(): Boolean {
@@ -372,38 +369,40 @@ abstract class BaseDecoder(private val mFilePath: String): IDecoder {
     }
 
     /**
-     * 检查子类参数
+     * Kiểm tra các thông số của lớp con
      */
     abstract fun check(): Boolean
 
     /**
-     * 初始化数据提取器
+     * Khởi tạo trình trích xuất dữ liệu
      */
     abstract fun initExtractor(path: String): IExtractor
 
     /**
-     * 初始化子类自己特有的参数
+     * Khởi tạo các tham số duy nhất của lớp con
      */
     abstract fun initSpecParams(format: MediaFormat)
 
     /**
-     * 配置解码器
+     * Định cấu hình bộ giải mã
      */
     abstract fun configCodec(codec: MediaCodec, format: MediaFormat): Boolean
 
     /**
-     * 初始化渲染器
+     * Khởi tạo trình kết xuất
      */
     abstract fun initRender(): Boolean
 
     /**
-     * 渲染
+     * Kết xuất
      */
-    abstract fun render(outputBuffer: ByteBuffer,
-                        bufferInfo: MediaCodec.BufferInfo)
+    abstract fun render(
+        outputBuffer: ByteBuffer,
+        bufferInfo: MediaCodec.BufferInfo
+    )
 
     /**
-     * 结束解码
+     * Kết thúc giải mã
      */
     abstract fun doneDecode()
 }

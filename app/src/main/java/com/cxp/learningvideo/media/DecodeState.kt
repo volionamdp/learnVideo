@@ -11,16 +11,16 @@ package com.cxp.learningvideo.media
  *
  */
 enum class DecodeState {
-    /**开始状态*/
+    /** Trạng thái bắt đầu */
     START,
-    /**解码中*/
+    /** Giải mã */
     DECODING,
-    /**解码暂停*/
+    /** Tạm dừng giải mã */
     PAUSE,
-    /**正在快进*/
+    /** Chuyển tiếp nhanh */
     SEEKING,
-    /**解码完成*/
+    /** Giải mã hoàn tất */
     FINISH,
-    /**解码器释放*/
+    /** Bản phát hành bộ giải mã */
     STOP
 }
